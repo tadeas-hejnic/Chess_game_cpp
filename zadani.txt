@@ -1,0 +1,114 @@
+# Hra CHESS ( téma: Šachy )
+Autor: Tadeáš Hejnic
+
+## Téma z Progtestu
+
+Klasická hra Šachy (příp. libovolná varianta - asijské šachy, ...)
+
+Implementujte následující varianty:
+
+	1. pro 2 hráče na jednom počítači
+	2. pro hru proti počítači
+
+Hra musí splňovat následující funkcionality:
+
+	- Dodržování všech pravidel dané varianty (u klasické varianty
+	  tedy i rošáda, braní mimochodem, proměna pěšce).
+	- Ukládání (resp. načítání) rozehrané hry do (resp. ze) souboru
+	  (vytvořte vhodný formát a uživatelské rozhraní)
+	- Oznamovat stav a konec hry (šach, mat, pat) a její výsledek.
+	- Umělá inteligence (škálovatelná nebo alespoň 3 různé druhy,
+	  jeden druh můžou být náhodné tahy, ale nestačí implementovat
+	  pouze náhodné tahy)
+
+Kde lze využít polymorfismus? (doporučené)
+
+- Ovládání hráčů: lokální hráč, umělá inteligence (různé druhy), síťový hráč
+- Pohyby figurek: král, dáma, věž, jezdec,...
+- Uživatelské rozhraní: konzolové, ncurses, SDL, OpenGL (různé druhy),...
+- Pravidla různých variant: klasické šachy, žravé šachy, asijské šachy
+- Jednotlivá pravidla: tahy, rošáda, braní mimochodem, proměna (jejich výběr
+  pak může být konfigurovatelný)
+
+## Specifikace zadání CHESS
+
+Hra CHESS bude po spuštění ovládána pomocí psaní jednoduchých příkazů do terminálu.
+Na výběr bude hra pro dva hráče a hra proti počítači se třemi úrovněmi obtížnosti ( "Beginner", "Pro", "Legend" ).
+Hlavní menu se bude ovládat pomocí znaků napsaných přímo v menu, samotná hra se ovládá pomocí zadávání souřadnic políček.
+V prvním kroku hráč napíše souřadnice figurky, se kterou chce táhnou.
+Následně dostane "nápovědu" možných tahů s touto figurkou a v tuto chvíli již má hráč figurku v ruce,
+takže již nemůže táhnout s jinou. Po výběru tahu se vyhodnotí akce a je na řadě druhý hráč.
+Ten dostane případně varování o šachu, matu atd. Vyhodnocení hry se zobrazí v terminálu.
+
+Kromě zadávání pozic máme během tahu k dispozici dvě klíčová slova:
+- `quit` ukončí program bez uložení
+- `save` přeruší hru a uloží ji
+
+#### Ukázka uživatelského rozhraní
+   ___ ___ ___ ___ ___ ___ ___ ___
+1 | ♖ | ♘ | ♗ | ♕ | ♔ | ♗ | _ | ♖ |
+2 | ♙ | ♙ | ♙ | _ | ♙ | ♙ | _ | ♙ |
+3 | _ | _ | _ | ♙ | _ | ♘ | _ | _ |
+4 | _ | _ | _ | _ | _ | _ | _ | _ |
+5 | _ | _ | ♟ | _ | _ | ♙ | _ | _ |
+6 | _ | _ | _ | _ | _ | _ | _ | ♞ |
+7 | ♟ | ♟ | _ | ♟ | ♟ | _ | ♟ | ♟ |
+8 | ♜ | ♞ | ♝ | ♛ | ♚ | ♝ | _ | ♜ |
+    A   B   C   D   E   F   G   H
+
+Type a position of chessman: D7
+
+Possible moves:  D6  D5
+Type your choice:
+
+...
+
+Na vykreslování ale nejspíš využiju barvy na pozadí (černé/bílé pole) a barvy figurek pro lepší čitelnost. V případě,
+že se nebudou správně zobrazovat Unicode znaky, použiju písmena.
+
+Druhá možnost vykreslení figurek pomocí písmen:
+* 'k' - king
+* 'q' - queen
+* 'b' - bishop
+* 'n' - knight
+* 'r' - rook
+* 'p' - pawn
+
+   ___ ___ ___ ___ ___ ___ ___ ___
+1 | r | n | b | q | k | b | _ | r |
+2 | p | p | p | _ | p | p | _ | p |
+3 | _ | _ | _ | p | _ | n | _ | _ |
+4 | _ | _ | _ | _ | _ | _ | _ | _ |
+5 | _ | _ | P | _ | _ | p | _ | _ |
+6 | _ | _ | _ | _ | _ | _ | _ | N |
+7 | P | P | _ | P | P | _ | P | P |
+8 | R | N | B | Q | K | B | _ | R |
+    A   B   C   D   E   F   G   H
+
+Type a position of chessman: D7
+
+Possible moves:  D6  D5
+Type your choice:
+
+
+### Rozmyšlení polymorfismu
+
+Polymorfismus využívám u třídy `CChessman`. Ta má dvě abstraktní metody `possibleMoves` a `print`.
+Tím se mi usnadní volání pro generování množiny možných tahů s danou figurkou.
+- metoda possibleMoves vrátí množinu možných tahů pro danou figurku
+- metoda print je jednoduchá metoda sloužící pro vykreslení figurky - každá figurka má
+  charakteristický Unicode znak / písmeno
+
+Druhý polymorfimus bude u jednotlivých tahů hráčů, resp. generování tahů pomocí "AI". Abstraktní třída CPlayer
+bude mít abstraktní metody `makeMove`. Díky tomu neřeším, zda je na tahu počítač, hráč č. 1 nebo č. 2. Navíc se
+automaticky vygeneruje tah adekvátní k obtížnosti zvolené na začátku v případě hry proti počítači.
+- metoda makeMove
+  * u CHuman zpracuje výběr tahu hráče
+  * u CBeginner, CPro a CLegend vyhodnotí situaci a vybere patříčný tah (pro každou úroveň jinak)
+
+Další možný polymorfismus je u generování herní desky na začátku hry. V případě nové hry se vygeneruje klasické
+rozestavení figurek. Naopak v případě načtení již dříve hrané hry se herní deska vygeneruje podle načteného souboru.
+Tento polymorfismus ještě nemám tolik promyšlený a ještě uvidím, jestli ho budu takto implementovat.
+
+
+
